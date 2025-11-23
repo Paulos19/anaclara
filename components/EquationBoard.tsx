@@ -2,15 +2,16 @@
 
 import { useState, useEffect } from "react";
 import { MemoryCard } from "./MemoryCard";
-import { LivesContainer } from "./LivesContainer"; // Importe o novo componente
+import { LivesContainer } from "./LivesContainer";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card"; // Importando Card
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Loader2, RefreshCw, Trophy, BrainCircuit } from "lucide-react";
+import { Loader2, RefreshCw, Trophy, BrainCircuit, User, GraduationCap, School, BookOpen } from "lucide-react"; // Novos ícones
 import { toast } from "sonner";
 import { motion } from "framer-motion";
 
-// ... (Mantenha os types GameData, Difficulty aqui) ...
+// --- TIPOS ---
 type GameData = {
   equationDisplay: string;
   solution: number;
@@ -28,7 +29,6 @@ type CardType = {
 type Difficulty = "easy" | "medium" | "hard";
 
 export default function EquationBoard() {
-  // ... (Estados anteriores de loading, gameData, lives, etc) ...
   const [loading, setLoading] = useState(true);
   const [cards, setCards] = useState<CardType[]>([]);
   const [gameData, setGameData] = useState<GameData | null>(null);
@@ -39,17 +39,11 @@ export default function EquationBoard() {
   const [isGameOver, setIsGameOver] = useState(false);
   const [isChallengeOpen, setIsChallengeOpen] = useState(false);
   const [userAnswer, setUserAnswer] = useState("");
-
-  // NOVO ESTADO: IDs das cartas que erraram (para animação de erro)
   const [errorIndices, setErrorIndices] = useState<number[]>([]);
 
-  // ... (Mantenha fetchNewGame e prepareBoard iguais) ...
-  
-  // A única mudança no fetchNewGame é resetar o errorIndices
+  // Reset de Erro ao Iniciar
   const fetchNewGame = async (levelOverride?: Difficulty) => {
-    // ... lógica anterior ...
-    setErrorIndices([]); // Resetar erros
-    // ... resto da função ...
+    setErrorIndices([]); 
     const levelToUse = levelOverride || difficulty;
     
     setLoading(true);
@@ -58,7 +52,7 @@ export default function EquationBoard() {
     setIsChallengeOpen(false);
     setUserAnswer("");
     setFlippedCards([]);
-    setCards([]); 
+    setCards([]);
 
     try {
       const res = await fetch(`/api/game/generate?level=${levelToUse}`);
@@ -82,7 +76,7 @@ export default function EquationBoard() {
       isFlipped: false,
       isMatched: false,
     }));
-    // Shuffle
+    
     for (let i = initialCards.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
       [initialCards[i], initialCards[j]] = [initialCards[j], initialCards[i]];
@@ -95,14 +89,16 @@ export default function EquationBoard() {
   const handleCardClick = (index: number) => {
     if (isProcessing || cards[index].isFlipped || cards[index].isMatched || isGameOver) return;
 
-    const newCards = [...cards];
-    newCards[index].isFlipped = true;
+    const newCards = cards.map((card, i) => 
+        i === index ? { ...card, isFlipped: true } : card
+    );
     setCards(newCards);
+
     const newFlipped = [...flippedCards, index];
     setFlippedCards(newFlipped);
 
     if (newFlipped.length === 2) {
-      setIsProcessing(true);
+      setIsProcessing(true); 
       checkForMatch(newFlipped, newCards);
     }
   };
@@ -113,37 +109,31 @@ export default function EquationBoard() {
     const card2 = currentCards[idx2];
 
     if (card1.term === card2.term) {
-      // --- MATCH (Correto) ---
-      // Pequeno som ou vibração poderia ser acionado aqui
       const matchedCards = currentCards.map((card, i) => 
         i === idx1 || i === idx2 ? { ...card, isMatched: true, isFlipped: true } : card
       );
       
       setCards(matchedCards);
       setFlippedCards([]);
-      setIsProcessing(false);
+      setIsProcessing(false); 
 
       if (matchedCards.every(c => c.isMatched)) {
-        setTimeout(() => setIsChallengeOpen(true), 800);
+        setTimeout(() => setIsChallengeOpen(true), 1500);
       }
 
     } else {
-      // --- ERROR (Incorreto) ---
-      // 1. Marca visualmente como erro para tremer (vermelho)
       setErrorIndices([idx1, idx2]);
 
       setTimeout(() => {
-        // 2. Reseta o estado (vira cartas para baixo e tira o erro)
         const resetCards = currentCards.map((card, i) => 
           i === idx1 || i === idx2 ? { ...card, isMatched: false, isFlipped: false } : card
         );
         
         setCards(resetCards);
-        setErrorIndices([]); // Remove o status de erro
+        setErrorIndices([]); 
         setFlippedCards([]);
-        setIsProcessing(false);
+        setIsProcessing(false); 
         
-        // Perde vida (O componente LivesContainer vai animar sozinho ao mudar esse número)
         const newLives = lives - 1;
         setLives(newLives);
         
@@ -151,11 +141,10 @@ export default function EquationBoard() {
             setIsGameOver(true);
             toast.error("Fim de jogo!");
         }
-      }, 1000); // Tempo para ver a animação de erro
+      }, 2000); 
     }
   };
 
-  // ... (handleFinalSubmit e handleDifficultyChange iguais) ...
   const handleFinalSubmit = () => {
       if (!gameData) return;
       if (parseInt(userAnswer) === gameData.solution) {
@@ -174,13 +163,58 @@ export default function EquationBoard() {
     fetchNewGame(level);
   };
 
+  // --- RENDER ---
   return (
     <div className="flex flex-col items-center gap-6 w-full max-w-5xl mx-auto p-4">
       
-      {/* HEADER DE CONTROLE */}
+      {/* --- STUDENT INFO CARD --- */}
+      <motion.div 
+        initial={{ y: -50, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ duration: 0.5 }}
+        className="w-full"
+      >
+        <Card className="border-l-4 border-l-blue-500 shadow-sm bg-white/90 backdrop-blur">
+          <CardContent className="p-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
+            
+            {/* Nome e Ícone do Aluno */}
+            <div className="flex items-center gap-4">
+              <div className="h-12 w-12 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 border border-blue-200">
+                <User className="h-6 w-6" />
+              </div>
+              <div>
+                <h3 className="font-bold text-slate-800 text-lg leading-tight">Ana Clara Lopes Carvalho</h3>
+                <div className="flex items-center gap-2 text-sm text-slate-500 mt-1">
+                   <span className="bg-slate-100 px-2 py-0.5 rounded text-xs font-medium border border-slate-200">Aluno(a)</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Detalhes (Turma, Prof, Matéria) */}
+            <div className="flex flex-wrap gap-4 md:gap-8 text-sm text-slate-600 border-t md:border-t-0 md:border-l pt-3 md:pt-0 md:pl-6 border-slate-100">
+              <div className="flex items-center gap-2">
+                <GraduationCap className="h-4 w-4 text-blue-500" />
+                <span className="font-semibold text-slate-700">Turma:</span> 7E
+              </div>
+              <div className="flex items-center gap-2">
+                <School className="h-4 w-4 text-purple-500" />
+                <span className="font-semibold text-slate-700">Prof:</span> Kelly
+              </div>
+              <div className="flex items-center gap-2">
+                <BookOpen className="h-4 w-4 text-orange-500" />
+                <span className="font-semibold text-slate-700">Matéria:</span> Matemática
+              </div>
+            </div>
+
+          </CardContent>
+        </Card>
+      </motion.div>
+
+      {/* --- GAME CONTROLS (HUD) --- */}
       <motion.div 
         initial={{ y: -20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
+        transition={{ delay: 0.1 }}
         className="flex flex-col md:flex-row justify-between w-full items-center bg-white p-4 rounded-xl shadow-sm border border-slate-200 gap-4"
       >
         <div className="flex gap-2 bg-slate-100 p-1 rounded-lg">
@@ -198,7 +232,6 @@ export default function EquationBoard() {
           ))}
         </div>
 
-        {/* COMPONENTE DE VIDAS ANIMADO */}
         <div className="flex items-center">
             <LivesContainer lives={lives} />
         </div>
@@ -209,7 +242,7 @@ export default function EquationBoard() {
         </Button>
       </motion.div>
 
-      {/* ÁREA DE JOGO */}
+      {/* --- GAME GRID --- */}
       <div className="w-full min-h-[400px] flex items-center justify-center relative bg-slate-50/50 rounded-2xl border-2 border-dashed border-slate-200 p-6 perspective-1000">
         
         {loading ? (
@@ -248,11 +281,11 @@ export default function EquationBoard() {
                   <MemoryCard
                     key={card.id}
                     id={card.id}
-                    index={index} // Passamos o index para animação escalonada
+                    index={index}
                     content={card.term}
                     isFlipped={card.isFlipped}
                     isMatched={card.isMatched}
-                    isError={errorIndices.includes(index)} // Verifica se essa carta está no array de erro
+                    isError={errorIndices.includes(index)}
                     onClick={() => handleCardClick(index)}
                   />
                 ))}
@@ -260,7 +293,7 @@ export default function EquationBoard() {
         )}
       </div>
 
-      {/* MODAL (Pode manter o mesmo, adicionando motion se quiser) */}
+      {/* --- FINAL CHALLENGE MODAL --- */}
       <Dialog open={isChallengeOpen} onOpenChange={setIsChallengeOpen}>
         <DialogContent className="sm:max-w-md bg-white">
           <DialogHeader>
