@@ -174,7 +174,7 @@ export default function EquationBoard() {
         transition={{ duration: 0.5 }}
         className="w-full"
       >
-        <Card className="border-l-4 border-l-blue-500 shadow-sm bg-white/90 backdrop-blur">
+        <Card className="border-l-4 border-l-blue-500 shadow-xl bg-white/95 backdrop-blur-md border-y-0 border-r-0">
           <CardContent className="p-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
             
             {/* Nome e Ícone do Aluno */}
